@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 정렬 버튼 클릭 이벤트
     sortButton.addEventListener('click', finalizeTable);
 });
-
 // 포맷에 맞춰 텍스트 생성 함수
 function generateFormattedText(parsedVehicles) {
     // 텍스트의 시작 부분
@@ -180,9 +179,101 @@ function createFormattedTextFromTable() {
     alert(formattedText); // 또는 원하는 방식으로 표시
 }
 
+// 호차 선택 시 중복 방지 기능 추가
+function updateHochaOptions() {
+    const rows = document.querySelectorAll('#resultBody tr');
+    const usedHocha = new Set();
+
+    // 현재 선택된 호차 수집
+    rows.forEach(row => {
+        const hocha = row.querySelector('td:nth-child(1) select').value;
+        if (hocha) {
+            usedHocha.add(hocha);
+        }
+    });
+
+    // 각 드롭다운의 옵션 업데이트
+    rows.forEach(row => {
+        const select = row.querySelector('td:nth-child(1) select');
+        const currentValue = select.value;
+        select.innerHTML = ''; // 기존 옵션 초기화
+
+        for (let i = 1; i <= rows.length; i++) {
+            const option = document.createElement('option');
+            option.value = `${i}호차`;
+            option.textContent = `${i}호차`;
+
+            if (usedHocha.has(option.value) && option.value !== currentValue) {
+                option.disabled = true; // 이미 사용된 호차는 비활성화
+            }
+
+            select.appendChild(option);
+        }
+
+        // 기존 선택값 복원
+        select.value = currentValue;
+    });
+}
+
 // 이벤트 리스너에 추가 (예: 버튼 클릭 시 실행)
 const exportButton = document.createElement('button');
 exportButton.textContent = '텍스트 출력';
 document.querySelector('.controls').appendChild(exportButton);
 
 exportButton.addEventListener('click', createFormattedTextFromTable);
+
+// 테이블 생성 버튼 이벤트 수정
+const createTableButton = document.getElementById('createTableButton');
+createTableButton.addEventListener('click', () => {
+    const parsedVehicles = parseCarInfo(inputText.value.trim());
+    resultBody.innerHTML = '';
+
+    parsedVehicles.forEach(vehicle => {
+        const row = document.createElement('tr');
+
+        // 호차 선택 드롭다운
+        const hochaCell = document.createElement('td');
+        const hochaSelect = document.createElement('select');
+        for (let i = 1; i <= parsedVehicles.length; i++) {
+            const option = document.createElement('option');
+            option.value = `${i}호차`;
+            option.textContent = `${i}호차`;
+            hochaSelect.appendChild(option);
+        }
+        hochaSelect.addEventListener('change', updateHochaOptions);
+        hochaCell.appendChild(hochaSelect);
+        row.appendChild(hochaCell);
+
+        // 이름
+        const nameCell = document.createElement('td');
+        nameCell.textContent = vehicle.name;
+        row.appendChild(nameCell);
+
+        // 번호
+        const phoneCell = document.createElement('td');
+        phoneCell.textContent = vehicle.phone;
+        row.appendChild(phoneCell);
+
+        // 차량번호
+        const carNumberCell = document.createElement('td');
+        carNumberCell.textContent = vehicle.carNumber;
+        row.appendChild(carNumberCell);
+
+        // 담당 팀 선택 드롭다운
+        const teamCell = document.createElement('td');
+        const teamSelect = document.createElement('select');
+        ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'].forEach(team => {
+            const option = document.createElement('option');
+            option.value = team;
+            option.textContent = team;
+            teamSelect.appendChild(option);
+        });
+        teamCell.appendChild(teamSelect);
+        row.appendChild(teamCell);
+
+        resultBody.appendChild(row);
+    });
+
+    updateHochaOptions(); // 초기 옵션 설정
+});
+
