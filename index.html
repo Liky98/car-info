@@ -11,7 +11,6 @@
         <h1>차량 정보 파서</h1>
         <textarea id="inputText" placeholder="여기에 텍스트를 입력하세요"></textarea>
         <div class="controls">
-            <input type="number" id="totalVehicles" placeholder="총 차량 수" min="1">
             <button id="createTableButton">테이블 생성</button>
         </div>
         <table id="resultTable">
@@ -30,6 +29,75 @@
             <button id="sortButton">정렬</button>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script>
+        const createTableButton = document.getElementById('createTableButton');
+        const resultBody = document.getElementById('resultBody');
+        const inputText = document.getElementById('inputText');
+        const sortButton = document.getElementById('sortButton');
+
+        // 테이블 생성
+        createTableButton.addEventListener('click', () => {
+            const lines = inputText.value.trim().split('\n');
+            resultBody.innerHTML = '';
+
+            lines.forEach((line, index) => {
+                const [name, number, vehicleNumber] = line.split(',').map(item => item.trim());
+                const row = document.createElement('tr');
+
+                // 호차 선택 드롭다운
+                const hochaCell = document.createElement('td');
+                const hochaSelect = document.createElement('select');
+                for (let i = 1; i <= 20; i++) { // 20호차까지 예시
+                    const option = document.createElement('option');
+                    option.value = `${i}호차`;
+                    option.textContent = `${i}호차`;
+                    hochaSelect.appendChild(option);
+                }
+                hochaCell.appendChild(hochaSelect);
+                row.appendChild(hochaCell);
+
+                // 이름
+                const nameCell = document.createElement('td');
+                nameCell.textContent = name || '';
+                row.appendChild(nameCell);
+
+                // 번호
+                const numberCell = document.createElement('td');
+                numberCell.textContent = number || '';
+                row.appendChild(numberCell);
+
+                // 차량번호
+                const vehicleCell = document.createElement('td');
+                vehicleCell.textContent = vehicleNumber || '';
+                row.appendChild(vehicleCell);
+
+                // 담당 팀 선택 드롭다운
+                const teamCell = document.createElement('td');
+                const teamSelect = document.createElement('select');
+                ['A팀', 'B팀', 'C팀', 'D팀'].forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    teamSelect.appendChild(option);
+                });
+                teamCell.appendChild(teamSelect);
+                row.appendChild(teamCell);
+
+                resultBody.appendChild(row);
+            });
+        });
+
+        // 정렬 버튼 기능 (예: 호차 기준 정렬)
+        sortButton.addEventListener('click', () => {
+            const rows = Array.from(resultBody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const hochaA = a.querySelector('select').value;
+                const hochaB = b.querySelector('select').value;
+                return hochaA.localeCompare(hochaB, 'ko', { numeric: true });
+            });
+            resultBody.innerHTML = '';
+            rows.forEach(row => resultBody.appendChild(row));
+        });
+    </script>
 </body>
 </html>
