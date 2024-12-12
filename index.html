@@ -101,138 +101,182 @@
         <div id="formattedTextOutput"></div>
     </div>
 
-<script>
-    let parsedVehicles = [];
-    const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
+    <script>
+        let parsedVehicles = [];
+        const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
 
-    function parseCarInfo(text) {
-        const carInfoList = [];
-        const lines = text.split('\n');
-        const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
+        function parseCarInfo(text) {
+             const carInfoList = [];
+            const lines = text.split('\n');
+            const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
 
-        lines.forEach(line => {
-            const match = line.match(regex);
-            if (match) {
-                carInfoList.push({
-                    name: match[1],
-                    phone: match[2].replace(/[-\s]/g, '-'),
-                    carNumber: match[3],
-                    vehicleNumber: null,
-                    team: null
-                });
-            }
-        });
-        return carInfoList;
-    }
-
-    function createHochaDropdown(usedHochaSet) {
-        const select = document.createElement('select');
-        select.appendChild(document.createElement('option')); // 빈 옵션 추가
-
-        for (let i = 1; i <= parsedVehicles.length; i++) {
-            const option = document.createElement('option');
-            option.value = `${i}호차`;
-            option.textContent = `${i}호차`;
-
-            if (usedHochaSet.has(option.value)) {
-                option.disabled = true;
-            }
-
-            select.appendChild(option);
+            lines.forEach(line => {
+                const match = line.match(regex);
+                if (match) {
+                    carInfoList.push({
+                        name: match[1],
+                        phone: match[2].replace(/[-\s]/g, '-'),
+                        carNumber: match[3],
+                        vehicleNumber: null,
+                        team: null
+                    });
+                }
+            });
+            return carInfoList;
         }
 
-        select.addEventListener('change', updateHochaOptions);
-        return select;
-    }
+        function createHochaDropdown(usedHochaSet, currentHocha) {
+            const select = document.createElement('select');
+            select.appendChild(document.createElement('option')); 
 
-    function updateHochaOptions() {
-        const rows = document.querySelectorAll('#resultBody tr');
-        const usedHocha = new Set();
-
-        rows.forEach(row => {
-            const hochaSelect = row.querySelector('td:nth-child(1) select');
-            const hocha = hochaSelect.value;
-            if (hocha) {
-                usedHocha.add(hocha);
-            }
-        });
-
-        rows.forEach(row => {
-            const hochaSelect = row.querySelector('td:nth-child(1) select');
-            const currentValue = hochaSelect.value;
-            hochaSelect.innerHTML = ''; // 기존 옵션들 지우기
-            const blankOption = document.createElement('option');
-            hochaSelect.appendChild(blankOption);
-
-            for (let i = 1; i <= rows.length; i++) {
+            for (let i = 1; i <= parsedVehicles.length; i++) {
                 const option = document.createElement('option');
                 option.value = `${i}호차`;
                 option.textContent = `${i}호차`;
 
-                if (usedHocha.has(option.value) && option.value !== currentValue) {
+               if (usedHochaSet.has(option.value) && option.value !== currentHocha) {
                     option.disabled = true;
-                }
+               }
 
-                hochaSelect.appendChild(option);
+                select.appendChild(option);
             }
+            select.value = currentHocha;
+            select.addEventListener('change', updateHochaOptions);
+            return select;
+        }
 
-            hochaSelect.value = currentValue;
-        });
-    }
+        function updateHochaOptions() {
+            const rows = document.querySelectorAll('#resultBody tr');
+             const usedHocha = new Set();
 
-    function createTable() {
-        const resultBody = document.getElementById('resultBody');
-        resultBody.innerHTML = ''; // 테이블 초기화
-
-        const usedHocha = new Set();
-
-        parsedVehicles.forEach((vehicle, index) => {
-            const row = document.createElement('tr');
-
-            const hochaCell = document.createElement('td');
-            const hochaDropdown = createHochaDropdown(usedHocha);
-            hochaCell.appendChild(hochaDropdown);
-            row.appendChild(hochaCell);
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = vehicle.name;
-            row.appendChild(nameCell);
-
-            const phoneCell = document.createElement('td');
-            phoneCell.textContent = vehicle.phone;
-            row.appendChild(phoneCell);
-
-            const carNumberCell = document.createElement('td');
-            carNumberCell.textContent = vehicle.carNumber;
-            row.appendChild(carNumberCell);
-
-            const teamCell = document.createElement('td');
-            const teamSelect = document.createElement('select');
-            teamOptions.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
-                teamSelect.appendChild(option);
+            rows.forEach(row => {
+                const hochaSelect = row.querySelector('td:nth-child(1) select');
+                const hocha = hochaSelect.value;
+                 if(hocha) {
+                  usedHocha.add(hocha);
+                 }
             });
-            teamCell.appendChild(teamSelect);
-            row.appendChild(teamCell);
 
-            resultBody.appendChild(row);
+            rows.forEach(row => {
+                const hochaSelect = row.querySelector('td:nth-child(1) select');
+                const currentValue = hochaSelect.value;
+                hochaSelect.innerHTML = ''; 
+                const blankOption = document.createElement('option');
+                hochaSelect.appendChild(blankOption);
+
+                for (let i = 1; i <= rows.length; i++) {
+                    const option = document.createElement('option');
+                    option.value = `${i}호차`;
+                    option.textContent = `${i}호차`;
+
+                    if (usedHocha.has(option.value) && option.value !== currentValue) {
+                        option.disabled = true;
+                    }
+
+                    hochaSelect.appendChild(option);
+                }
+                 hochaSelect.value = currentValue;
+            });
+        }
+
+       function createTable() {
+            const resultBody = document.getElementById('resultBody');
+            resultBody.innerHTML = '';
+
+            const usedHocha = new Set();
+
+            parsedVehicles.forEach((vehicle, index) => {
+                const row = document.createElement('tr');
+
+                const hochaCell = document.createElement('td');
+                const hochaDropdown = createHochaDropdown(usedHocha, vehicle.vehicleNumber);
+                hochaCell.appendChild(hochaDropdown);
+                row.appendChild(hochaCell);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = vehicle.name;
+                row.appendChild(nameCell);
+
+                const phoneCell = document.createElement('td');
+                phoneCell.textContent = vehicle.phone;
+                row.appendChild(phoneCell);
+
+                const carNumberCell = document.createElement('td');
+                carNumberCell.textContent = vehicle.carNumber;
+                row.appendChild(carNumberCell);
+
+               const teamCell = document.createElement('td');
+                const teamSelect = document.createElement('select');
+                teamOptions.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    teamSelect.appendChild(option);
+                 });
+                if (vehicle.team) {
+                     teamSelect.value = vehicle.team;
+                  }
+                teamCell.appendChild(teamSelect);
+                row.appendChild(teamCell);
+
+                resultBody.appendChild(row);
+            });
+            updateHochaOptions();
+        }
+
+
+        function generateFormattedText(parsedVehicles) {
+            let formattedText = `현장에서의 배차 구분을 위해 아래와 같이 임의로 호차를 구분할 예정입니다. 각 기장님들은 호차 확인해주시면 감사하겠습니다!\n\n`;
+
+            const validVehicles = parsedVehicles.filter(v => v.vehicleNumber);
+
+            validVehicles.forEach(vehicle => {
+                formattedText += `${vehicle.vehicleNumber}\n`;
+                formattedText += `[이름] : ${vehicle.name}\n`;
+                formattedText += `[차량번호] : ${vehicle.carNumber}\n\n`;
+            });
+
+            return formattedText;
+        }
+
+        function createFormattedTextFromTable() {
+            const rows = document.querySelectorAll('#resultBody tr');
+            const formattedVehicles = [];
+
+            rows.forEach(row => {
+                const hocha = row.querySelector('td:nth-child(1) select').value;
+                const name = row.querySelector('td:nth-child(2)').textContent.trim();
+                const carNumber = row.querySelector('td:nth-child(4)').textContent.trim();
+
+                if (name && carNumber && hocha) {
+                    formattedVehicles.push({
+                        vehicleNumber: hocha,
+                        name: name,
+                        carNumber: carNumber
+                    });
+                }
+            });
+
+            formattedVehicles.sort((a, b) => parseInt(a.vehicleNumber) - parseInt(b.vehicleNumber));
+            const formattedText = generateFormattedText(formattedVehicles);
+            document.getElementById('formattedTextOutput').textContent = formattedText;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('inputText');
+            const createTableButton = document.getElementById('createTableButton');
+            const sortButton = document.getElementById('sortButton');
+            const exportTextButton = document.getElementById('exportTextButton');
+
+            createTableButton.addEventListener('click', () => {
+                parsedVehicles = parseCarInfo(inputText.value);
+                createTable();
+            });
+
+            sortButton.addEventListener('click', updateHochaOptions);
+
+            exportTextButton.addEventListener('click', createFormattedTextFromTable);
         });
-
-        updateHochaOptions();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const inputText = document.getElementById('inputText');
-        const createTableButton = document.getElementById('createTableButton');
-
-        createTableButton.addEventListener('click', () => {
-            parsedVehicles = parseCarInfo(inputText.value);
-            createTable();
-        });
-    });
-</script>
-
+    </script>
 </body>
 </html>
