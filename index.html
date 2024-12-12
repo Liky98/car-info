@@ -10,13 +10,18 @@
     <div class="container">
         <h1>차량 정보 파서</h1>
         <textarea id="inputText" placeholder="여기에 텍스트를 입력하세요"></textarea>
-        <button id="parseButton">파싱</button>
+        <div class="controls">
+            <button id="parseButton">파싱</button>
+            <input type="number" id="totalVehicles" placeholder="총 차량 수" min="1">
+        </div>
         <table id="resultTable">
             <thead>
                 <tr>
+                    <th>호차</th>
                     <th>이름</th>
                     <th>번호</th>
                     <th>차량번호</th>
+                    <th>담당</th>
                 </tr>
             </thead>
             <tbody id="resultBody"></tbody>
