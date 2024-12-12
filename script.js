@@ -2,21 +2,18 @@
 let parsedVehicles = [];
 
 // 담당 팀 옵션
-const teamOptions = [
-    '연출팀', 
-    '작가팀', 
-    '카메라팀', 
-    '동시팀', 
-    '거치팀', 
-    '폴캠팀'
-];
+const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
 
+// 호차 드롭다운 옵션
+const hochaOptions = Array.from({ length: 20 }, (_, i) => `${i + 1}호차`);
+
+// 차량 정보 파싱 함수
 function parseCarInfo(text) {
     const carInfoList = [];
     const lines = text.split('\n');
 
-    // 이름(2-3글자), 전화번호, 차량번호 추출을 위한 정규표현식
-    const regex = /^([가-힣]{2,3})\s*(\d{3}\s*\d{4}\s*\d{4})\s*차번(\d{2,3}[가-힣]\d{4})/;
+    // 이름(2-3글자), 전화번호, 차량번호 추출
+    const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
 
     lines.forEach(line => {
         const match = line.match(regex);
@@ -24,7 +21,7 @@ function parseCarInfo(text) {
         if (match) {
             carInfoList.push({
                 name: match[1],
-                phone: match[2].replace(/\s/g, '-'),
+                phone: match[2].replace(/[-\s]/g, '-'),
                 carNumber: match[3],
                 vehicleNumber: null,
                 team: null
@@ -35,21 +32,21 @@ function parseCarInfo(text) {
     return carInfoList;
 }
 
-// 팀 선택 드롭다운 생성 함수
-function createTeamDropdown(selectedTeam = null) {
+// 드롭다운 생성 함수
+function createDropdown(options, selectedValue = null, onChangeCallback = null) {
     const select = document.createElement('select');
-    select.classList.add('team-select');
-
-    teamOptions.forEach(team => {
-        const option = document.createElement('option');
-        option.value = team;
-        option.textContent = team;
-        if (team === selectedTeam) {
-            option.selected = true;
+    options.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        optionElement.textContent = option;
+        if (option === selectedValue) {
+            optionElement.selected = true;
         }
-        select.appendChild(option);
+        select.appendChild(optionElement);
     });
-
+    if (onChangeCallback) {
+        select.addEventListener('change', onChangeCallback);
+    }
     return select;
 }
 
@@ -60,45 +57,46 @@ function createTable() {
     // 테이블 초기화
     resultBody.innerHTML = '';
 
-    // 모든 차량에 대해 행 생성
     parsedVehicles.forEach((vehicle, index) => {
         const row = document.createElement('tr');
 
         // 호차 셀
-        const vehicleNumberCell = document.createElement('td');
-        vehicleNumberCell.textContent = vehicle.vehicleNumber || '';
-        vehicleNumberCell.classList.add('editable-cell');
-        vehicleNumberCell.setAttribute('contenteditable', 'true');
-        vehicleNumberCell.addEventListener('input', (e) => {
-            const value = parseInt(e.target.textContent);
-            vehicle.vehicleNumber = isNaN(value) ? null : value;
-        });
+        const hochaCell = document.createElement('td');
+        const hochaDropdown = createDropdown(
+            hochaOptions,
+            vehicle.vehicleNumber,
+            e => {
+                vehicle.vehicleNumber = e.target.value;
+            }
+        );
+        hochaCell.appendChild(hochaDropdown);
+        row.appendChild(hochaCell);
 
         // 이름 셀
         const nameCell = document.createElement('td');
         nameCell.textContent = vehicle.name;
+        row.appendChild(nameCell);
 
         // 번호 셀
         const phoneCell = document.createElement('td');
         phoneCell.textContent = vehicle.phone;
+        row.appendChild(phoneCell);
 
         // 차량번호 셀
         const carNumberCell = document.createElement('td');
         carNumberCell.textContent = vehicle.carNumber;
+        row.appendChild(carNumberCell);
 
         // 팀 선택 셀
         const teamCell = document.createElement('td');
-        const teamDropdown = createTeamDropdown(vehicle.team);
-        teamDropdown.addEventListener('change', (e) => {
-            vehicle.team = e.target.value;
-        });
+        const teamDropdown = createDropdown(
+            teamOptions,
+            vehicle.team,
+            e => {
+                vehicle.team = e.target.value;
+            }
+        );
         teamCell.appendChild(teamDropdown);
-
-        // 행에 셀 추가
-        row.appendChild(vehicleNumberCell);
-        row.appendChild(nameCell);
-        row.appendChild(phoneCell);
-        row.appendChild(carNumberCell);
         row.appendChild(teamCell);
 
         resultBody.appendChild(row);
@@ -107,30 +105,29 @@ function createTable() {
 
 // 정렬 및 완료 함수
 function finalizeTable() {
-    // 호차 기준으로 정렬
+    // 호차 기준 정렬
     parsedVehicles.sort((a, b) => {
-        if (a.vehicleNumber === null) return 1;
-        if (b.vehicleNumber === null) return -1;
-        return a.vehicleNumber - b.vehicleNumber;
+        const hochaA = hochaOptions.indexOf(a.vehicleNumber);
+        const hochaB = hochaOptions.indexOf(b.vehicleNumber);
+        return hochaA - hochaB;
     });
 
     // 정렬된 데이터로 테이블 재생성
     createTable();
+
+    // 사용자에게 알림
+    alert('테이블이 정렬되었습니다.');
 }
 
 // 이벤트 리스너 설정
 document.addEventListener('DOMContentLoaded', () => {
-    // 텍스트 파싱 버튼
     const inputText = document.getElementById('inputText');
     const createTableButton = document.getElementById('createTableButton');
     const sortButton = document.getElementById('sortButton');
 
     // 테이블 생성 버튼 클릭 이벤트
     createTableButton.addEventListener('click', () => {
-        // 텍스트 파싱
         parsedVehicles = parseCarInfo(inputText.value);
-
-        // 테이블 생성
         createTable();
     });
 
