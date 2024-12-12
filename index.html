@@ -127,7 +127,7 @@
 
         function createHochaDropdown(usedHochaSet) {
             const select = document.createElement('select');
-            select.appendChild(document.createElement('option')); 
+            select.appendChild(document.createElement('option')); // 빈 옵션 추가
 
             for (let i = 1; i <= parsedVehicles.length; i++) {
                 const option = document.createElement('option');
@@ -160,7 +160,7 @@
             rows.forEach(row => {
                 const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const currentValue = hochaSelect.value;
-                hochaSelect.innerHTML = ''; 
+                hochaSelect.innerHTML = ''; // 기존 옵션들 지우기
                 const blankOption = document.createElement('option');
                 hochaSelect.appendChild(blankOption);
 
@@ -182,7 +182,7 @@
 
         function createTable() {
             const resultBody = document.getElementById('resultBody');
-            resultBody.innerHTML = '';
+            resultBody.innerHTML = ''; // 테이블 초기화
 
             const usedHocha = new Set();
 
