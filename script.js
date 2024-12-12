@@ -1,8 +1,18 @@
+// 전역 변수로 파싱된 차량 정보 저장
+let parsedVehicles = [];
+
+// 담당 팀 옵션
+const teamOptions = [
+    '연출팀', 
+    '작가팀', 
+    '카메라팀', 
+    '동시팀', 
+    '거치팀', 
+    '폴캠팀'
+];
+
 function parseCarInfo(text) {
-    // 결과를 저장할 배열
     const carInfoList = [];
-    
-    // 텍스트를 줄 단위로 분리
     const lines = text.split('\n');
     
     // 이름(2-3글자), 전화번호, 차량번호 추출을 위한 정규표현식
@@ -15,7 +25,9 @@ function parseCarInfo(text) {
             carInfoList.push({
                 name: match[1],
                 phone: match[2].replace(/\s/g, '-'),
-                carNumber: match[3]
+                carNumber: match[3],
+                vehicleNumber: null,
+                team: null
             });
         }
     });
@@ -23,88 +35,103 @@ function parseCarInfo(text) {
     return carInfoList;
 }
 
-// 담당 팀 옵션
-const teamOptions = [
-    '연출팀', 
-    '작가팀', 
-    '카메라팀', 
-    '동시팀', 
-    '거치팀', 
-    '폴캠팀'
-];
-
-// DOM 요소 선택
-const inputText = document.getElementById('inputText');
-const parseButton = document.getElementById('parseButton');
-const resultBody = document.getElementById('resultBody');
-const totalVehiclesInput = document.getElementById('totalVehicles');
-
 // 팀 선택 드롭다운 생성 함수
-function createTeamDropdown() {
+function createTeamDropdown(selectedTeam = null) {
     const select = document.createElement('select');
+    select.classList.add('team-select');
+    
     teamOptions.forEach(team => {
         const option = document.createElement('option');
         option.value = team;
         option.textContent = team;
+        if (team === selectedTeam) {
+            option.selected = true;
+        }
         select.appendChild(option);
     });
+    
     return select;
 }
 
-// 파싱 버튼 클릭 이벤트
-parseButton.addEventListener('click', () => {
-    // 입력된 텍스트 가져오기
-    const text = inputText.value;
-    
-    // 파싱 수행
-    const results = parseCarInfo(text);
-    
-    // 총 차량 수 가져오기
-    const totalVehicles = parseInt(totalVehiclesInput.value);
-    
-    // 결과를 배열에 추가하고 정렬
-    const sortedResults = [];
-    
-    // 최대 totalVehicles 만큼 호차 할당
-    results.forEach((info, index) => {
-        if (index < totalVehicles) {
-            sortedResults.push({
-                ...info,
-                vehicleNumber: index + 1 // 호차 1부터 시작
-            });
-        }
-    });
-    
-    // 호차 번호 기준으로 정렬
-    sortedResults.sort((a, b) => a.vehicleNumber - b.vehicleNumber);
+// 테이블 생성 함수
+function createTable() {
+    const resultBody = document.getElementById('resultBody');
+    const totalVehicles = document.getElementById('totalVehicles').value;
     
     // 테이블 초기화
     resultBody.innerHTML = '';
     
-    // 결과를 테이블에 추가
-    sortedResults.forEach(info => {
+    // 모든 차량에 대해 행 생성
+    parsedVehicles.forEach((vehicle, index) => {
         const row = document.createElement('tr');
         
-        // 호차, 이름, 번호, 차량번호 셀 생성
-        const cells = [
-            `${info.vehicleNumber}호차`,
-            info.name,
-            info.phone,
-            info.carNumber
-        ];
+        // 호차 셀
+        const vehicleNumberCell = document.createElement('td');
+        vehicleNumberCell.textContent = '';
+        vehicleNumberCell.classList.add('editable-cell');
+        vehicleNumberCell.setAttribute('contenteditable', 'true');
         
-        cells.forEach(cellContent => {
-            const td = document.createElement('td');
-            td.textContent = cellContent;
-            row.appendChild(td);
-        });
+        // 이름 셀
+        const nameCell = document.createElement('td');
+        nameCell.textContent = vehicle.name;
         
-        // 담당 팀 드롭다운 셀 추가
+        // 번호 셀
+        const phoneCell = document.createElement('td');
+        phoneCell.textContent = vehicle.phone;
+        
+        // 차량번호 셀
+        const carNumberCell = document.createElement('td');
+        carNumberCell.textContent = vehicle.carNumber;
+        
+        // 팀 선택 셀
         const teamCell = document.createElement('td');
         const teamDropdown = createTeamDropdown();
         teamCell.appendChild(teamDropdown);
+        
+        // 행에 셀 추가
+        row.appendChild(vehicleNumberCell);
+        row.appendChild(nameCell);
+        row.appendChild(phoneCell);
+        row.appendChild(carNumberCell);
         row.appendChild(teamCell);
         
         resultBody.appendChild(row);
     });
+}
+
+// 정렬 함수
+function sortTable() {
+    const resultBody = document.getElementById('resultBody');
+    const rows = Array.from(resultBody.querySelectorAll('tr'));
+    
+    // 호차 정보로 정렬
+    const sortedRows = rows.sort((a, b) => {
+        const aVehicleNumber = parseInt(a.querySelector('td:first-child').textContent);
+        const bVehicleNumber = parseInt(b.querySelector('td:first-child').textContent);
+        return aVehicleNumber - bVehicleNumber;
+    });
+    
+    // 정렬된 행 다시 추가
+    resultBody.innerHTML = '';
+    sortedRows.forEach(row => resultBody.appendChild(row));
+}
+
+// 이벤트 리스너 설정
+document.addEventListener('DOMContentLoaded', () => {
+    // 텍스트 파싱 버튼
+    const inputText = document.getElementById('inputText');
+    const createTableButton = document.getElementById('createTableButton');
+    const sortButton = document.getElementById('sortButton');
+    
+    // 테이블 생성 버튼 클릭 이벤트
+    createTableButton.addEventListener('click', () => {
+        // 텍스트 파싱
+        parsedVehicles = parseCarInfo(inputText.value);
+        
+        // 테이블 생성
+        createTable();
+    });
+    
+    // 정렬 버튼 클릭 이벤트
+    sortButton.addEventListener('click', sortTable);
 });
