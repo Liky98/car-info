@@ -134,3 +134,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // 정렬 버튼 클릭 이벤트
     sortButton.addEventListener('click', finalizeTable);
 });
+
+// 포맷에 맞춰 텍스트 생성 함수
+function generateFormattedText(parsedVehicles) {
+    // 텍스트의 시작 부분
+    let formattedText = `현장에서의 배차 구분을 위해 아래와 같이 임의로 호차를 구분할 예정입니다. 각 기장님들은 호차 확인해주시면 감사하겠습니다!\n\n`;
+
+    // 차량 정보 순회
+    parsedVehicles.forEach(vehicle => {
+        formattedText += `${vehicle.vehicleNumber}호차\n`;
+        formattedText += `[이름] : ${vehicle.name}\n`;
+        formattedText += `[차량번호] : ${vehicle.carNumber}\n\n`;
+    });
+
+    return formattedText;
+}
+
+// 테이블의 데이터로부터 포맷에 맞는 텍스트 생성 및 출력
+function createFormattedTextFromTable() {
+    const rows = document.querySelectorAll('#resultBody tr');
+    const formattedVehicles = [];
+
+    rows.forEach(row => {
+        const hocha = row.querySelector('td:nth-child(1) select').value.replace('호차', ''); // 호차 값
+        const name = row.querySelector('td:nth-child(2)').textContent.trim();
+        const carNumber = row.querySelector('td:nth-child(4)').textContent.trim();
+
+        if (name && carNumber) {
+            formattedVehicles.push({
+                vehicleNumber: hocha,
+                name: name,
+                carNumber: carNumber
+            });
+        }
+    });
+
+    // 호차 기준으로 정렬
+    formattedVehicles.sort((a, b) => parseInt(a.vehicleNumber) - parseInt(b.vehicleNumber));
+
+    // 포맷에 맞는 텍스트 생성
+    const formattedText = generateFormattedText(formattedVehicles);
+
+    // 텍스트 출력 (예: 콘솔 또는 화면 표시)
+    console.log(formattedText);
+    alert(formattedText); // 또는 원하는 방식으로 표시
+}
+
+// 이벤트 리스너에 추가 (예: 버튼 클릭 시 실행)
+const exportButton = document.createElement('button');
+exportButton.textContent = '텍스트 출력';
+document.querySelector('.controls').appendChild(exportButton);
+
+exportButton.addEventListener('click', createFormattedTextFromTable);
