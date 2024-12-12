@@ -105,8 +105,8 @@
         let parsedVehicles = [];
         const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
 
-        function parseCarInfo(text) {
-             const carInfoList = [];
+       function parseCarInfo(text) {
+            const carInfoList = [];
             const lines = text.split('\n');
             const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
 
@@ -125,10 +125,10 @@
             return carInfoList;
         }
 
-        function createHochaDropdown(usedHochaSet, currentHocha) {
+        function createHochaDropdown(usedHochaSet, currentHocha, row) {
             const select = document.createElement('select');
             select.appendChild(document.createElement('option')); 
-
+          
             for (let i = 1; i <= parsedVehicles.length; i++) {
                 const option = document.createElement('option');
                 option.value = `${i}호차`;
@@ -141,26 +141,27 @@
                 select.appendChild(option);
             }
             select.value = currentHocha;
-            select.addEventListener('change', updateHochaOptions);
+             select.addEventListener('change', () => updateHochaOptions(row));
             return select;
         }
 
-        function updateHochaOptions() {
-            const rows = document.querySelectorAll('#resultBody tr');
+
+        function updateHochaOptions(currentRow) {
+             const rows = document.querySelectorAll('#resultBody tr');
              const usedHocha = new Set();
 
             rows.forEach(row => {
-                const hochaSelect = row.querySelector('td:nth-child(1) select');
+               const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const hocha = hochaSelect.value;
-                 if(hocha) {
-                  usedHocha.add(hocha);
+                  if(hocha) {
+                     usedHocha.add(hocha);
                  }
             });
 
             rows.forEach(row => {
-                const hochaSelect = row.querySelector('td:nth-child(1) select');
+              const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const currentValue = hochaSelect.value;
-                hochaSelect.innerHTML = ''; 
+               hochaSelect.innerHTML = ''; 
                 const blankOption = document.createElement('option');
                 hochaSelect.appendChild(blankOption);
 
@@ -172,57 +173,58 @@
                     if (usedHocha.has(option.value) && option.value !== currentValue) {
                         option.disabled = true;
                     }
-
                     hochaSelect.appendChild(option);
                 }
-                 hochaSelect.value = currentValue;
+                hochaSelect.value = currentValue;
             });
+            if(currentRow) {
+               currentRow.focus();
+             }
         }
+        
+        function createTable() {
+          const resultBody = document.getElementById('resultBody');
+          resultBody.innerHTML = '';
+          const usedHocha = new Set();
+    
+          parsedVehicles.forEach((vehicle, index) => {
+            const row = document.createElement('tr');
 
-       function createTable() {
-            const resultBody = document.getElementById('resultBody');
-            resultBody.innerHTML = '';
+            const hochaCell = document.createElement('td');
+           const hochaDropdown = createHochaDropdown(usedHocha, vehicle.vehicleNumber, row);
+            hochaCell.appendChild(hochaDropdown);
+            row.appendChild(hochaCell);
 
-            const usedHocha = new Set();
+            const nameCell = document.createElement('td');
+            nameCell.textContent = vehicle.name;
+            row.appendChild(nameCell);
 
-            parsedVehicles.forEach((vehicle, index) => {
-                const row = document.createElement('tr');
+            const phoneCell = document.createElement('td');
+            phoneCell.textContent = vehicle.phone;
+            row.appendChild(phoneCell);
 
-                const hochaCell = document.createElement('td');
-                const hochaDropdown = createHochaDropdown(usedHocha, vehicle.vehicleNumber);
-                hochaCell.appendChild(hochaDropdown);
-                row.appendChild(hochaCell);
+             const carNumberCell = document.createElement('td');
+             carNumberCell.textContent = vehicle.carNumber;
+            row.appendChild(carNumberCell);
 
-                const nameCell = document.createElement('td');
-                nameCell.textContent = vehicle.name;
-                row.appendChild(nameCell);
+           const teamCell = document.createElement('td');
+             const teamSelect = document.createElement('select');
+             teamOptions.forEach(team => {
+                 const option = document.createElement('option');
+                  option.value = team;
+                option.textContent = team;
+                  teamSelect.appendChild(option);
+             });
+           if (vehicle.team) {
+               teamSelect.value = vehicle.team;
+             }
+            teamCell.appendChild(teamSelect);
+             row.appendChild(teamCell);
 
-                const phoneCell = document.createElement('td');
-                phoneCell.textContent = vehicle.phone;
-                row.appendChild(phoneCell);
-
-                const carNumberCell = document.createElement('td');
-                carNumberCell.textContent = vehicle.carNumber;
-                row.appendChild(carNumberCell);
-
-               const teamCell = document.createElement('td');
-                const teamSelect = document.createElement('select');
-                teamOptions.forEach(team => {
-                    const option = document.createElement('option');
-                    option.value = team;
-                    option.textContent = team;
-                    teamSelect.appendChild(option);
-                 });
-                if (vehicle.team) {
-                     teamSelect.value = vehicle.team;
-                  }
-                teamCell.appendChild(teamSelect);
-                row.appendChild(teamCell);
-
-                resultBody.appendChild(row);
-            });
+           resultBody.appendChild(row);
+          });
             updateHochaOptions();
-        }
+         }
 
 
         function generateFormattedText(parsedVehicles) {
@@ -239,7 +241,7 @@
             return formattedText;
         }
 
-        function createFormattedTextFromTable() {
+       function createFormattedTextFromTable() {
             const rows = document.querySelectorAll('#resultBody tr');
             const formattedVehicles = [];
 
