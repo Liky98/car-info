@@ -106,65 +106,83 @@
         const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
 
         function parseCarInfo(text) {
-           const carInfoList = [];
+            const carInfoList = [];
             const lines = text.split('\n');
             const regex = /^([가-힣]{2,3})([\d\s-]+)차번(\d{2,3}[가-힣]\d{4})/;
 
             lines.forEach(line => {
                 const trimmedLine = line.trim();
                 if (trimmedLine) {
-                 const match = trimmedLine.match(regex);
-                if (match) {
-                    carInfoList.push({
-                        name: match[1].trim(),
-                        phone: match[2].replace(/[-\s]/g, '-').trim(),
-                        carNumber: match[3],
-                        vehicleNumber: null,
-                        team: null
-                    });
+                    const match = trimmedLine.match(regex);
+                    if (match) {
+                        carInfoList.push({
+                            name: match[1].trim(),
+                            phone: match[2].replace(/[-\s]/g, '-').trim(),
+                            carNumber: match[3],
+                            vehicleNumber: null,
+                            team: null
+                        });
+                    }
                 }
-            }
             });
             return carInfoList;
         }
 
-
-       function createHochaDropdown(usedHochaSet, currentHocha, row) {
+        function createHochaDropdown(usedHochaSet, currentHocha, row) {
             const select = document.createElement('select');
-            select.appendChild(document.createElement('option')); 
-          
+            select.appendChild(document.createElement('option'));
+
             for (let i = 1; i <= parsedVehicles.length; i++) {
                 const option = document.createElement('option');
                 option.value = `${i}호차`;
                 option.textContent = `${i}호차`;
 
-               if (usedHochaSet.has(option.value) && option.value !== currentHocha) {
+                if (usedHochaSet.has(option.value) && option.value !== currentHocha) {
                     option.disabled = true;
-               }
+                }
 
                 select.appendChild(option);
             }
             select.value = currentHocha;
-             select.addEventListener('change', () => updateHochaOptions(row));
+            select.addEventListener('change', () => updateHochaOptions(row));
             return select;
         }
 
         function updateHochaOptions(currentRow) {
-             const rows = document.querySelectorAll('#resultBody tr');
-             const usedHocha = new Set();
+            const rows = document.querySelectorAll('#resultBody tr');
+            const usedHocha = new Set();
 
             rows.forEach(row => {
-               const hochaSelect = row.querySelector('td:nth-child(1) select');
+                const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const hocha = hochaSelect.value;
-                  if(hocha) {
-                     usedHocha.add(hocha);
-                 }
+                if (hocha) {
+                    usedHocha.add(hocha);
+                }
             });
 
+            // 테이블 행 정렬
+            const resultBody = document.getElementById('resultBody');
+            const rowsArray = Array.from(rows);
+
+            rowsArray.sort((a, b) => {
+                const aHocha = a.querySelector('td:nth-child(1) select').value;
+                const bHocha = b.querySelector('td:nth-child(1) select').value;
+
+                const aHochaNum = aHocha ? parseInt(aHocha.replace('호차', '')) : Infinity;
+                const bHochaNum = bHocha ? parseInt(bHocha.replace('호차', '')) : Infinity;
+
+                return aHochaNum - bHochaNum;
+            });
+
+            // 정렬된 행을 테이블에 다시 추가
+            resultBody.innerHTML = '';
+            rowsArray.forEach(row => resultBody.appendChild(row));
+
+
             rows.forEach(row => {
-              const hochaSelect = row.querySelector('td:nth-child(1) select');
+                const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const currentValue = hochaSelect.value;
-               hochaSelect.innerHTML = ''; 
+                hochaSelect.innerHTML = '';
                 const blankOption = document.createElement('option');
                 hochaSelect.appendChild(blankOption);
 
@@ -180,7 +198,8 @@
                 }
                 hochaSelect.value = currentValue;
             });
-            if(currentRow) {
+
+             if(currentRow) {
                currentRow.focus();
              }
         }
@@ -277,7 +296,10 @@
                 createTable();
             });
 
-            sortButton.addEventListener('click', updateHochaOptions);
+             sortButton.addEventListener('click', () => {
+                 updateHochaOptions();
+             });
+
 
             exportTextButton.addEventListener('click', createFormattedTextFromTable);
         });
