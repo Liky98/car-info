@@ -35,19 +35,39 @@
         const inputText = document.getElementById('inputText');
         const sortButton = document.getElementById('sortButton');
 
+        // 정규표현식 기반 차량 정보 파싱
+        function parseCarInfo(text) {
+            const lines = text.split('\n');
+            const carInfoList = [];
+
+            const regex = /([가-힣]{2,3})\s*(\d{3}\s*\d{4}\s*\d{4})\s*차번(\d{2,3}[가-힣]\d{4})/;
+
+            lines.forEach(line => {
+                const match = line.match(regex);
+                if (match) {
+                    carInfoList.push({
+                        name: match[1],
+                        phone: match[2].replace(/\s+/g, '-'), // 공백 제거 후 하이픈으로 대체
+                        carNumber: match[3]
+                    });
+                }
+            });
+
+            return carInfoList;
+        }
+
         // 테이블 생성
         createTableButton.addEventListener('click', () => {
-            const lines = inputText.value.trim().split('\n');
+            const parsedVehicles = parseCarInfo(inputText.value.trim());
             resultBody.innerHTML = '';
 
-            lines.forEach((line, index) => {
-                const [name, number, vehicleNumber] = line.split(',').map(item => item.trim());
+            parsedVehicles.forEach(vehicle => {
                 const row = document.createElement('tr');
 
                 // 호차 선택 드롭다운
                 const hochaCell = document.createElement('td');
                 const hochaSelect = document.createElement('select');
-                for (let i = 1; i <= 20; i++) { // 20호차까지 예시
+                for (let i = 1; i <= 20; i++) {
                     const option = document.createElement('option');
                     option.value = `${i}호차`;
                     option.textContent = `${i}호차`;
@@ -58,23 +78,23 @@
 
                 // 이름
                 const nameCell = document.createElement('td');
-                nameCell.textContent = name || '';
+                nameCell.textContent = vehicle.name;
                 row.appendChild(nameCell);
 
                 // 번호
-                const numberCell = document.createElement('td');
-                numberCell.textContent = number || '';
-                row.appendChild(numberCell);
+                const phoneCell = document.createElement('td');
+                phoneCell.textContent = vehicle.phone;
+                row.appendChild(phoneCell);
 
                 // 차량번호
-                const vehicleCell = document.createElement('td');
-                vehicleCell.textContent = vehicleNumber || '';
-                row.appendChild(vehicleCell);
+                const carNumberCell = document.createElement('td');
+                carNumberCell.textContent = vehicle.carNumber;
+                row.appendChild(carNumberCell);
 
                 // 담당 팀 선택 드롭다운
                 const teamCell = document.createElement('td');
                 const teamSelect = document.createElement('select');
-                ['A팀', 'B팀', 'C팀', 'D팀'].forEach(team => {
+                ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'].forEach(team => {
                     const option = document.createElement('option');
                     option.value = team;
                     option.textContent = team;
