@@ -11,8 +11,8 @@
         <h1>차량 정보 파서</h1>
         <textarea id="inputText" placeholder="여기에 텍스트를 입력하세요"></textarea>
         <div class="controls">
-            <button id="parseButton">파싱</button>
             <input type="number" id="totalVehicles" placeholder="총 차량 수" min="1">
+            <button id="createTableButton">테이블 생성</button>
         </div>
         <table id="resultTable">
             <thead>
@@ -26,6 +26,9 @@
             </thead>
             <tbody id="resultBody"></tbody>
         </table>
+        <div class="controls">
+            <button id="sortButton">정렬</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
