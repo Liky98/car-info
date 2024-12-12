@@ -105,10 +105,10 @@
         let parsedVehicles = [];
         const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
 
-       function parseCarInfo(text) {
+        function parseCarInfo(text) {
             const carInfoList = [];
             const lines = text.split('\n');
-            const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
+            const regex = /^([가-힣]{2,3})\s+([\d\s-]+)\s+차번(\d{2,3}[가-힣]\d{4})/;
 
             lines.forEach(line => {
                 const match = line.match(regex);
@@ -125,7 +125,7 @@
             return carInfoList;
         }
 
-        function createHochaDropdown(usedHochaSet, currentHocha, row) {
+       function createHochaDropdown(usedHochaSet, currentHocha, row) {
             const select = document.createElement('select');
             select.appendChild(document.createElement('option')); 
           
@@ -144,7 +144,6 @@
              select.addEventListener('change', () => updateHochaOptions(row));
             return select;
         }
-
 
         function updateHochaOptions(currentRow) {
              const rows = document.querySelectorAll('#resultBody tr');
@@ -183,15 +182,15 @@
         }
         
         function createTable() {
-          const resultBody = document.getElementById('resultBody');
-          resultBody.innerHTML = '';
-          const usedHocha = new Set();
-    
-          parsedVehicles.forEach((vehicle, index) => {
+            const resultBody = document.getElementById('resultBody');
+            resultBody.innerHTML = '';
+            const usedHocha = new Set();
+        
+            parsedVehicles.forEach((vehicle, index) => {
             const row = document.createElement('tr');
 
             const hochaCell = document.createElement('td');
-           const hochaDropdown = createHochaDropdown(usedHocha, vehicle.vehicleNumber, row);
+            const hochaDropdown = createHochaDropdown(usedHocha, vehicle.vehicleNumber, row);
             hochaCell.appendChild(hochaDropdown);
             row.appendChild(hochaCell);
 
@@ -199,33 +198,32 @@
             nameCell.textContent = vehicle.name;
             row.appendChild(nameCell);
 
-            const phoneCell = document.createElement('td');
+             const phoneCell = document.createElement('td');
             phoneCell.textContent = vehicle.phone;
             row.appendChild(phoneCell);
 
-             const carNumberCell = document.createElement('td');
-             carNumberCell.textContent = vehicle.carNumber;
+            const carNumberCell = document.createElement('td');
+            carNumberCell.textContent = vehicle.carNumber;
             row.appendChild(carNumberCell);
 
-           const teamCell = document.createElement('td');
-             const teamSelect = document.createElement('select');
+            const teamCell = document.createElement('td');
+            const teamSelect = document.createElement('select');
              teamOptions.forEach(team => {
-                 const option = document.createElement('option');
-                  option.value = team;
-                option.textContent = team;
-                  teamSelect.appendChild(option);
-             });
-           if (vehicle.team) {
-               teamSelect.value = vehicle.team;
-             }
-            teamCell.appendChild(teamSelect);
-             row.appendChild(teamCell);
+               const option = document.createElement('option');
+                option.value = team;
+               option.textContent = team;
+                teamSelect.appendChild(option);
+              });
+             if (vehicle.team) {
+                teamSelect.value = vehicle.team;
+               }
+             teamCell.appendChild(teamSelect);
+              row.appendChild(teamCell);
 
-           resultBody.appendChild(row);
-          });
+            resultBody.appendChild(row);
+           });
             updateHochaOptions();
-         }
-
+        }
 
         function generateFormattedText(parsedVehicles) {
             let formattedText = `현장에서의 배차 구분을 위해 아래와 같이 임의로 호차를 구분할 예정입니다. 각 기장님들은 호차 확인해주시면 감사하겠습니다!\n\n`;
