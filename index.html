@@ -102,23 +102,16 @@
     </div>
 
     <script>
-        // 전역 변수로 파싱된 차량 정보 저장
         let parsedVehicles = [];
-        
-        // 담당 팀 옵션
         const teamOptions = ['연출팀', '작가팀', '카메라팀', '동시팀', '거치팀', '폴캠팀'];
-        
-        // 차량 정보 파싱 함수
+
         function parseCarInfo(text) {
             const carInfoList = [];
             const lines = text.split('\n');
-        
-            // 이름(2-3글자), 전화번호, 차량번호 추출
-            const regex = /^([가-힣]{2,3})\s*(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s*차번(\d{2,3}[가-힣]\d{4})/;
-        
+            const regex = /^([가-힣]{2,3})\s+(\d{3}[-\s]?\d{4}[-\s]?\d{4})\s+차번(\d{2,3}[가-힣]\d{4})/;
+
             lines.forEach(line => {
                 const match = line.match(regex);
-        
                 if (match) {
                     carInfoList.push({
                         name: match[1],
@@ -129,100 +122,33 @@
                     });
                 }
             });
-        
-            // 차량번호 순으로 정렬
-            carInfoList.sort((a, b) => {
-                const carNumA = a.carNumber.replace(/[가-힣]/g, '');
-                const carNumB = b.carNumber.replace(/[가-힣]/g, '');
-                return parseInt(carNumA) - parseInt(carNumB);
-            });
-        
             return carInfoList;
         }
-        
-        // 드롭다운 생성 함수 (기본값 없음)
+
         function createHochaDropdown(usedHochaSet) {
             const select = document.createElement('select');
-            select.appendChild(document.createElement('option')); // 빈 옵션 추가
-        
-            // 1부터 총 차량 수까지 호차 생성
+            select.appendChild(document.createElement('option')); 
+
             for (let i = 1; i <= parsedVehicles.length; i++) {
                 const option = document.createElement('option');
                 option.value = `${i}호차`;
                 option.textContent = `${i}호차`;
-        
-                // 이미 사용된 호차 비활성화
+
                 if (usedHochaSet.has(option.value)) {
                     option.disabled = true;
                 }
-        
+
                 select.appendChild(option);
             }
-        
-            select.addEventListener('change', updateTableSorting);
+
+            select.addEventListener('change', updateHochaOptions);
             return select;
         }
-        
-        // 호차 선택 및 정렬 함수
-        function updateTableSorting() {
-            const rows = Array.from(document.querySelectorAll('#resultBody tr'));
-            const usedHocha = new Set();
-        
-            // 먼저 호차가 선택된 행들을 상단에 정렬
-            const selectedRows = [];
-            const unselectedRows = [];
-        
-            rows.forEach(row => {
-                const hochaSelect = row.querySelector('td:nth-child(1) select');
-                if (hochaSelect.value) {
-                    selectedRows.push(row);
-                    usedHocha.add(hochaSelect.value);
-                } else {
-                    unselectedRows.push(row);
-                }
-            });
-        
-            // 선택된 호차 행 정렬 (호차 번호 순)
-            selectedRows.sort((a, b) => {
-                const hochaA = a.querySelector('td:nth-child(1) select').value;
-                const hochaB = b.querySelector('td:nth-child(1) select').value;
-                return parseInt(hochaA) - parseInt(hochaB);
-            });
-        
-            // 결과 테이블 재구성
-            const resultBody = document.getElementById('resultBody');
-            resultBody.innerHTML = '';
-        
-            // 선택된 행 먼저 추가
-            selectedRows.forEach(row => resultBody.appendChild(row));
-        
-            // 선택되지 않은 행 추가
-            unselectedRows.forEach(row => {
-                const hochaSelect = row.querySelector('td:nth-child(1) select');
-                
-                // 사용 가능한 가장 낮은 호차 자동 선택
-                for (let i = 1; i <= rows.length; i++) {
-                    const potentialHocha = `${i}호차`;
-                    if (!usedHocha.has(potentialHocha)) {
-                        hochaSelect.value = potentialHocha;
-                        usedHocha.add(potentialHocha);
-                        break;
-                    }
-                }
-                
-                resultBody.appendChild(row);
-            });
-        
-            // 드롭다운 옵션 업데이트
-            updateHochaOptions();
-        }
-        
-        // 호차 선택 시 중복 방지 기능
+
         function updateHochaOptions() {
             const rows = document.querySelectorAll('#resultBody tr');
             const usedHocha = new Set();
-        
-            // 현재 선택된 호차 수집
+
             rows.forEach(row => {
                 const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const hocha = hochaSelect.value;
@@ -230,145 +156,56 @@
                     usedHocha.add(hocha);
                 }
             });
-        
-            // 각 드롭다운의 옵션 업데이트
+
             rows.forEach(row => {
                 const hochaSelect = row.querySelector('td:nth-child(1) select');
                 const currentValue = hochaSelect.value;
-                hochaSelect.innerHTML = ''; // 기존 옵션 초기화
-        
-                // 빈 옵션 추가
+                hochaSelect.innerHTML = ''; 
                 const blankOption = document.createElement('option');
                 hochaSelect.appendChild(blankOption);
-        
-                // 호차 옵션 추가
+
                 for (let i = 1; i <= rows.length; i++) {
                     const option = document.createElement('option');
                     option.value = `${i}호차`;
                     option.textContent = `${i}호차`;
-        
+
                     if (usedHocha.has(option.value) && option.value !== currentValue) {
-                        option.disabled = true; // 이미 사용된 호차는 비활성화
+                        option.disabled = true;
                     }
-        
+
                     hochaSelect.appendChild(option);
                 }
-        
-                // 기존 선택값 복원
+
                 hochaSelect.value = currentValue;
             });
         }
-        
-        // 포맷에 맞춰 텍스트 생성 함수
-        function generateFormattedText(parsedVehicles) {
-            let formattedText = `현장에서의 배차 구분을 위해 아래와 같이 임의로 호차를 구분할 예정입니다. 각 기장님들은 호차 확인해주시면 감사하겠습니다!\n\n`;
-        
-            // 호차 번호 순으로 정렬 및 필터링
-            const validVehicles = parsedVehicles
-                .filter(v => v.vehicleNumber)
-                .sort((a, b) => {
-                    const hochaNumA = parseInt(a.vehicleNumber);
-                    const hochaNumB = parseInt(b.vehicleNumber);
-                    return hochaNumA - hochaNumB;
-                });
-        
-            validVehicles.forEach(vehicle => {
-                formattedText += `${vehicle.vehicleNumber}\n`;
-                formattedText += `[이름] : ${vehicle.name}\n`;
-                formattedText += `[차량번호] : ${vehicle.carNumber}\n\n`;
-            });
-        
-            return formattedText;
-        }
-        
-        // 테이블의 데이터로부터 포맷에 맞는 텍스트 생성
-        function createFormattedTextFromTable() {
-            const rows = document.querySelectorAll('#resultBody tr');
-            const formattedVehicles = [];
-        
-            rows.forEach(row => {
-                const hocha = row.querySelector('td:nth-child(1) select').value;
-                const name = row.querySelector('td:nth-child(2)').textContent.trim();
-                const carNumber = row.querySelector('td:nth-child(4)').textContent.trim();
-        
-                if (name && carNumber && hocha) {
-                    // 호차에서 '호차' 제거하고 숫자만 추출
-                    const hochaNum = hocha.replace('호차', '');
-                    
-                    formattedVehicles.push({
-                        vehicleNumber: hocha,
-                        name: name,
-                        carNumber: carNumber
-                    });
-                }
-            });
-        
-            // 호차 기준으로 정렬
-            formattedVehicles.sort((a, b) => {
-                const hochaA = parseInt(a.vehicleNumber);
-                const hochaB = parseInt(b.vehicleNumber);
-                return hochaA - hochaB;
-            });
-        
-            // 포맷에 맞는 텍스트 생성
-            const formattedText = generateFormattedText(formattedVehicles);
-        
-            // 텍스트 출력
-            document.getElementById('formattedTextOutput').textContent = formattedText;
-        }
-        
-        // 이벤트 리스너 설정
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputText = document.getElementById('inputText');
-            const createTableButton = document.getElementById('createTableButton');
-            const sortButton = document.getElementById('sortButton');
-            const exportTextButton = document.getElementById('exportTextButton');
-        
-            // 테이블 생성 버튼 클릭 이벤트
-            createTableButton.addEventListener('click', () => {
-                parsedVehicles = parseCarInfo(inputText.value);
-                createTable();
-            });
-        
-            // 정렬 버튼 클릭 이벤트
-            sortButton.addEventListener('click', updateTableSorting);
-        
-            // 텍스트 생성 버튼 클릭 이벤트
-            exportTextButton.addEventListener('click', createFormattedTextFromTable);
-        });
-        
-        // 테이블 생성 함수
+
         function createTable() {
             const resultBody = document.getElementById('resultBody');
             resultBody.innerHTML = '';
-        
+
             const usedHocha = new Set();
-        
+
             parsedVehicles.forEach((vehicle, index) => {
                 const row = document.createElement('tr');
-        
-                // 호차 셀 (기본값 없음)
+
                 const hochaCell = document.createElement('td');
                 const hochaDropdown = createHochaDropdown(usedHocha);
                 hochaCell.appendChild(hochaDropdown);
                 row.appendChild(hochaCell);
-        
-                // 이름 셀
+
                 const nameCell = document.createElement('td');
                 nameCell.textContent = vehicle.name;
                 row.appendChild(nameCell);
-        
-                // 번호 셀
+
                 const phoneCell = document.createElement('td');
                 phoneCell.textContent = vehicle.phone;
                 row.appendChild(phoneCell);
-        
-                // 차량번호 셀
+
                 const carNumberCell = document.createElement('td');
                 carNumberCell.textContent = vehicle.carNumber;
                 row.appendChild(carNumberCell);
-        
-                // 팀 선택 셀
+
                 const teamCell = document.createElement('td');
                 const teamSelect = document.createElement('select');
                 teamOptions.forEach(team => {
@@ -379,13 +216,65 @@
                 });
                 teamCell.appendChild(teamSelect);
                 row.appendChild(teamCell);
-        
+
                 resultBody.appendChild(row);
             });
-        
-            // 테이블 정렬 및 호차 자동 할당
-            updateTableSorting();
+
+            updateHochaOptions();
         }
+
+        function generateFormattedText(parsedVehicles) {
+            let formattedText = `현장에서의 배차 구분을 위해 아래와 같이 임의로 호차를 구분할 예정입니다. 각 기장님들은 호차 확인해주시면 감사하겠습니다!\n\n`;
+
+            const validVehicles = parsedVehicles.filter(v => v.vehicleNumber);
+
+            validVehicles.forEach(vehicle => {
+                formattedText += `${vehicle.vehicleNumber}\n`;
+                formattedText += `[이름] : ${vehicle.name}\n`;
+                formattedText += `[차량번호] : ${vehicle.carNumber}\n\n`;
+            });
+
+            return formattedText;
+        }
+
+        function createFormattedTextFromTable() {
+            const rows = document.querySelectorAll('#resultBody tr');
+            const formattedVehicles = [];
+
+            rows.forEach(row => {
+                const hocha = row.querySelector('td:nth-child(1) select').value;
+                const name = row.querySelector('td:nth-child(2)').textContent.trim();
+                const carNumber = row.querySelector('td:nth-child(4)').textContent.trim();
+
+                if (name && carNumber && hocha) {
+                    formattedVehicles.push({
+                        vehicleNumber: hocha,
+                        name: name,
+                        carNumber: carNumber
+                    });
+                }
+            });
+
+            formattedVehicles.sort((a, b) => parseInt(a.vehicleNumber) - parseInt(b.vehicleNumber));
+            const formattedText = generateFormattedText(formattedVehicles);
+            document.getElementById('formattedTextOutput').textContent = formattedText;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('inputText');
+            const createTableButton = document.getElementById('createTableButton');
+            const sortButton = document.getElementById('sortButton');
+            const exportTextButton = document.getElementById('exportTextButton');
+
+            createTableButton.addEventListener('click', () => {
+                parsedVehicles = parseCarInfo(inputText.value);
+                createTable();
+            });
+
+            sortButton.addEventListener('click', updateHochaOptions);
+
+            exportTextButton.addEventListener('click', createFormattedTextFromTable);
+        });
     </script>
 </body>
 </html>
